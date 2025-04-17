@@ -3,9 +3,9 @@ import numpy as np
 
 # Class names for bounding boxes
 # Define the paths and classes
-SOURCE_IMAGE_PATH = "artifacts/helmet.jpeg"
-TARGET_IMAGE_PATH = "artifacts/helmet3.jpeg"
-NAMES = ["head", "helmet"]
+SOURCE_IMAGE_PATH = "artifacts/helmet.jpeg"  # Your source image
+TARGET_IMAGE_PATH = "artifacts/helmet3.jpeg"  # Path to save the output image
+NAMES = ["head", "helmet", "person", "object"]  # Multiple classes to annotate
 
 # Global variables to store bounding box data
 bbox_list = []
@@ -25,14 +25,25 @@ def draw_bbox(event, x, y, flags, param):
     elif event == cv2.EVENT_MOUSEMOVE:
         if drawing:
             img_copy = img.copy()  # Copy the original image to show the current rectangle
+            for box in bbox_list:  # Redraw all previously drawn boxes
+                cv2.rectangle(img_copy, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+                cv2.putText(img_copy, f'{box[4]}', (box[0], box[1] - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+
+            # Draw the current rectangle
             cv2.rectangle(img_copy, (start_x, start_y), (x, y), (0, 255, 0), 2)
 
     elif event == cv2.EVENT_LBUTTONUP:
         drawing = False
-        # Save the bounding box
+        # Save the bounding box with class name
         bbox_list.append((start_x, start_y, x, y, NAMES[current_class_idx]))  # Add class info
-        cv2.rectangle(img_copy, (start_x, start_y), (x, y), (0, 255, 0), 2)
-        # Put the class name label
+        # Draw all bounding boxes again, including the new one
+        img_copy = img.copy()
+        for box in bbox_list:
+            cv2.rectangle(img_copy, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+            cv2.putText(img_copy, f'{box[4]}', (box[0], box[1] - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+        # Put the class name label for the newly drawn box
         cv2.putText(img_copy, f'Class: {NAMES[current_class_idx]}', (start_x, start_y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
@@ -54,6 +65,9 @@ while True:
         break
     elif key == ord('n'):  # Press 'n' to change class to the next one
         current_class_idx = (current_class_idx + 1) % len(NAMES)  # Cycle through the classes
+    elif key == ord('c'):  # Press 'c' to clear all bounding boxes
+        bbox_list = []
+        img_copy = img.copy()  # Reset image to original
 
 # Clean up and close
 cv2.destroyAllWindows()
